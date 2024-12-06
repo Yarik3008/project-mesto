@@ -1,0 +1,42 @@
+.profile__image {
+  width: 120px;
+  height: 120px;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  margin: 0 29px 0 0;
+  position: relative; /* Для отображения иконки поверх */
+  cursor: pointer; /* Указывает на кликабельность */
+}
+
+.profile__image::after {
+  content: ''; /* Псевдоэлемент для иконки редактирования */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('/src/images/edit-icon.svg') no-repeat center center;
+
+  background-size: 50%; /* Размер иконки */
+  opacity: 0; /* По умолчанию скрыта */
+  transition: opacity 0.3s ease; /* Плавный переход */
+}
+
+.profile__image:hover::after {
+  opacity: 1; /* Отображение иконки при наведении */
+}
+
+@media screen and (max-width: 740px) {
+  .profile__image {
+    margin: 0 10px 0 0;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .profile__image {
+    margin-right: 0;
+  }
+}
