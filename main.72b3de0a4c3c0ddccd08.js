@@ -172,6 +172,75 @@ var fetchUserProfile = function fetchUserProfile() {
     headers: apiConfig.headers
   }).then(handleResponse);
 };
+;// ./src/components/cards.js
+// Импорты из других модулей
+
+
+
+// Переменная для попапа просмотра изображения
+var imageViewPopup = document.querySelector('.popup_type_image');
+
+// Экспортируемая функция для создания карточки
+function generateCard(cardData, loggedInUserId) {
+  var template = document.querySelector('#card-template').content;
+  var cardElement = template.querySelector('.card').cloneNode(true);
+  var cardImage = cardElement.querySelector('.card__image');
+  var cardTitle = cardElement.querySelector('.card__title');
+  var likeButton = cardElement.querySelector('.card__like-button');
+  var likeCount = cardElement.querySelector('.card__like-count');
+  var deleteButton = cardElement.querySelector('.card__delete-button');
+  cardImage.src = cardData.link;
+  cardImage.alt = cardData.name;
+  cardTitle.textContent = cardData.name;
+  likeCount.textContent = cardData.likes.length;
+  if (cardData.likes.some(function (user) {
+    return user._id === loggedInUserId;
+  })) {
+    likeButton.classList.add('card__like-button_is-active');
+  }
+
+  // Обработчик для лайка
+  likeButton.addEventListener('click', function () {
+    if (likeButton.classList.contains('card__like-button_is-active')) {
+      removeLikeFromCard(cardData._id).then(function (updatedCard) {
+        likeButton.classList.remove('card__like-button_is-active');
+        likeCount.textContent = updatedCard.likes.length;
+      }).catch(function (err) {
+        console.error('Ошибка при снятии лайка:', err);
+      });
+    } else {
+      addLikeToCard(cardData._id).then(function (updatedCard) {
+        likeButton.classList.add('card__like-button_is-active');
+        likeCount.textContent = updatedCard.likes.length;
+      }).catch(function (err) {
+        console.error('Ошибка при постановке лайка:', err);
+      });
+    }
+  });
+
+  // Удаление карточки
+  if (cardData.owner._id !== loggedInUserId) {
+    deleteButton.style.display = 'none';
+  }
+  deleteButton.addEventListener('click', function () {
+    removeCard(cardData._id).then(function () {
+      cardElement.remove();
+    }).catch(function (err) {
+      console.error('Ошибка при удалении карточки:', err);
+    });
+  });
+
+  // Открытие попапа с изображением
+  cardImage.addEventListener('click', function () {
+    var popupImage = imageViewPopup.querySelector('.popup__image');
+    var popupCaption = imageViewPopup.querySelector('.popup__caption');
+    popupImage.src = cardData.link;
+    popupImage.alt = cardData.name;
+    popupCaption.textContent = cardData.name;
+    openPopup(imageViewPopup);
+  });
+  return cardElement;
+}
 ;// ./src/components/index.js
 // Импорты
 
@@ -200,7 +269,7 @@ var cardContainer = document.querySelector('.places__list');
 // Элементы поп-апов
 var editProfilePopup = document.querySelector('.popup_type_edit');
 var addCardPopup = document.querySelector('.popup_type_new-card');
-var imageViewPopup = document.querySelector('.popup_type_image');
+var components_imageViewPopup = document.querySelector('.popup_type_image');
 
 // Кнопки закрытия поп-апов
 var closePopupButtons = document.querySelectorAll('.popup__close');
@@ -245,61 +314,6 @@ fetchInitialCards().then(function (cards) {
   console.error("\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438 \u043A\u0430\u0440\u0442\u043E\u0447\u0435\u043A: ".concat(err));
 });
 
-// Функция для создания карточки
-function generateCard(cardData, loggedInUserId) {
-  var template = document.querySelector('#card-template').content;
-  var cardElement = template.querySelector('.card').cloneNode(true);
-  var cardImage = cardElement.querySelector('.card__image');
-  var cardTitle = cardElement.querySelector('.card__title');
-  var likeButton = cardElement.querySelector('.card__like-button');
-  var likeCount = cardElement.querySelector('.card__like-count');
-  var deleteButton = cardElement.querySelector('.card__delete-button');
-  cardImage.src = cardData.link;
-  cardImage.alt = cardData.name;
-  cardTitle.textContent = cardData.name;
-  likeCount.textContent = cardData.likes.length;
-  if (cardData.likes.some(function (user) {
-    return user._id === loggedInUserId;
-  })) {
-    likeButton.classList.add('card__like-button_is-active');
-  }
-  likeButton.addEventListener('click', function () {
-    if (likeButton.classList.contains('card__like-button_is-active')) {
-      removeLikeFromCard(cardData._id).then(function (updatedCard) {
-        likeButton.classList.remove('card__like-button_is-active');
-        likeCount.textContent = updatedCard.likes.length;
-      }).catch(function (err) {
-        console.error('Ошибка при снятии лайка:', err);
-      });
-    } else {
-      addLikeToCard(cardData._id).then(function (updatedCard) {
-        likeButton.classList.add('card__like-button_is-active');
-        likeCount.textContent = updatedCard.likes.length;
-      }).catch(function (err) {
-        console.error('Ошибка при постановке лайка:', err);
-      });
-    }
-  });
-  if (cardData.owner._id !== loggedInUserId) {
-    deleteButton.style.display = 'none';
-  }
-  deleteButton.addEventListener('click', function () {
-    removeCard(cardData._id).then(function () {
-      cardElement.remove();
-    }).catch(function (err) {
-      console.error('Ошибка при удалении карточки:', err);
-    });
-  });
-  cardImage.addEventListener('click', function () {
-    var popupImage = imageViewPopup.querySelector('.popup__image');
-    var popupCaption = imageViewPopup.querySelector('.popup__caption');
-    popupImage.src = cardData.link;
-    popupImage.alt = cardData.name;
-    popupCaption.textContent = cardData.name;
-    openPopup(imageViewPopup);
-  });
-  return cardElement;
-}
 // Функция для отображения карточек
 function displayCards(cards) {
   cards.forEach(function (cardData) {
@@ -352,6 +366,11 @@ newCardForm.addEventListener('submit', function (evt) {
   }).finally(function () {
     submitButton.textContent = 'Создать';
   });
+});
+avatarUrlInput.addEventListener('input', function () {
+  var inputs = [avatarUrlInput];
+  var submitButton = avatarForm.querySelector('.popup__button');
+  toggleButtonState(inputs, submitButton);
 });
 profileAvatarImgElement.addEventListener('click', function () {
   openPopup(updateAvatarPopup);
